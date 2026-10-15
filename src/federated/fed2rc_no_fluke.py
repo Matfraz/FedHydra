@@ -301,21 +301,21 @@ def main():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_kernels})
-                csv_path = 'results/fed2rc_metrics/fed2rc_results.csv'
-                os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-                file_exists = os.path.isfile(csv_path)
-                
-                with open(csv_path, mode='a', newline='') as f:
-                    writer = csv.writer(f)
-                    if not file_exists:
-                        writer.writerow(["Dataset", "Seed", "Test_Accuracy", "Test_F1", "Rounds_to_Converge", "Final_Kernels"])
-                    writer.writerow([ds_name, experiment_seed, test_accuracy, test_f1, epoch, final_num_kernels])
             else:
                 wandb.log({f'Test Accuracy ({experiment_seed})': test_accuracy,
                             f'Test F1 ({experiment_seed})': test_f1,
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_kernels})
+            csv_path = 'results/fed2rc_metrics/fed2rc_results.csv'
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            file_exists = os.path.isfile(csv_path)
+            
+            with open(csv_path, mode='a', newline='') as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Dataset", "Seed", "Test_Accuracy", "Test_F1", "Rounds_to_Converge", "Final_Kernels"])
+                writer.writerow([ds_name, experiment_seed, test_accuracy, test_f1, epoch, final_num_kernels])
         wandb.finish()
 
 if __name__ == '__main__':
