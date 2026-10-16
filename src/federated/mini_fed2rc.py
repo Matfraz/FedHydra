@@ -199,7 +199,7 @@ def split_function(features, target, num_clients, random_state, my_split='unifor
     else:
         raise ValueError("Invalid split type. Choose 'continuous', 'uniform', or 'random'.")
 
-list_of_datasets = ['Car', 'Coffee','Computers']
+list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
 n_clients = 4
 n_rounds = 100
 n_kernels = 84 #924 #9996

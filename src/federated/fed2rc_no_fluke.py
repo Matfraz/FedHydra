@@ -42,7 +42,7 @@ def main():
     #list_of_datasets = ['PigCVP'] #example
     # Costruisce un'unica grande lista contenente i nomi di tutti i 
     # dataset disponibili nell'archivio UCR.
-    list_of_datasets = ['Car', 'Coffee','Computers']
+    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
 
     #Se è vera, dice esplicitamente alla libreria wandb di disattivarsi (mode="disabled"). 
     # In questo modo puoi far girare il codice sul tuo computer 

@@ -14,10 +14,10 @@ from .centralized.run_quant import quant
 from .centralized.run_minirocket import mini_rocket
 from .centralized.run_rocket import rocket
 
-from .utils.data_loader import get_binary_dataset_names, get_four_dataset_names, load_dataset
+from .utils.data_loader import get_binary_dataset_names, get_four_dataset_names, load_dataset, get_multiclass_dataset_name
 
 def run_experiments():
-    lists_of_dbs = get_binary_dataset_names() + get_four_dataset_names()
+    lists_of_dbs = get_binary_dataset_names() + get_four_dataset_names() + get_multiclass_dataset_name()
 
     models = {
         'Rocket': rocket,

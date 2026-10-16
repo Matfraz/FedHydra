@@ -13,6 +13,12 @@ def get_four_dataset_names():
         'Car'
     ]
 
+def get_multiclass_dataset_name():
+    return [
+        'EOGHorizontalSignal'
+    ]
+
+
 def load_dataset(ds_name):
     LE = LabelEncoder()
     ds_train = pd.read_table(f'data/UCR_Archive/{ds_name}/{ds_name}_TRAIN.tsv', header=None).to_numpy()
