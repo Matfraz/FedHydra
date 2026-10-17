@@ -3,6 +3,7 @@ import pandas as pd
 import random
 from sktime.transformations.panel.rocket import Rocket
 from sklearn.preprocessing import LabelEncoder
+from aeon.transformations.collection.convolution_based import HydraTransformer
 
 # Better interface with helper functions
 class RocketKernel:
@@ -22,9 +23,28 @@ class RocketKernel:
 
         return X_transformed
 
+
+class HydraGroup:
+    def __init__(self, seed, ts_length):
+        self.hydra = HydraTransformer(n_kernels = 8, n_groups = 1, random_state = int(seed))
+        self.hydra.fit(np.zeros((1, 1, ts_length)))
+
+    def transform(self, X):
+        if len(X.shape) <= 1:
+            X = X.reshape(1, -1)
+
+        X_transformed = self.hydra.transform(np.expand_dims(X, 1)).to_numpy()
+
+        return X_transformed
+
+def hydra_transform_seeds(X, seeds, ts_length):
+    K = [HydraGroup(int(seed), ts_length) for seed in seeds]
+    return np.concatenate([k.transform(X) for k in K], axis=1)
+
 def transform_seeds(X, seeds, ts_length):
     K = [RocketKernel(int(seed), ts_length, ppv_only=True) for seed in seeds]
     return np.concatenate([k.transform(X) for k in K], axis=1)
+
 
 def get_binary_dataset_names():
     return [
