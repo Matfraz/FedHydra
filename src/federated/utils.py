@@ -33,7 +33,7 @@ class HydraGroup:
         if len(X.shape) <= 1:
             X = X.reshape(1, -1)
 
-        X_transformed = self.hydra.transform(np.expand_dims(X, 1)).to_numpy()
+        X_transformed = self.hydra.transform(np.expand_dims(X, 1))
 
         return X_transformed
 

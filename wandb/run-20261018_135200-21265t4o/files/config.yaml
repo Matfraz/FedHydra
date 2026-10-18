@@ -1,0 +1,55 @@
+_wandb:
+    value:
+        cli_version: 0.30.0
+        e:
+            xtoc21bi0m86fn1ut5iqt54kaybck9es:
+                codePath: src/federated/fedhydra.py
+                codePathLocal: src/federated/fedhydra.py
+                cpu_count: 14
+                cpu_count_logical: 20
+                cudaVersion: "13.2"
+                disk:
+                    /:
+                        total: "176769077248"
+                        used: "124961148928"
+                email: mattiagaglia03@gmail.com
+                executable: /home/mattia/.virtualenvs/python_env/bin/python
+                git:
+                    commit: e94c7a35f29352bb017e9daa4d8e743eb7fbf332
+                    remote: https://github.com/Matfraz/tsc-experiments.git
+                gpu: NVIDIA GeForce RTX 4060 Laptop GPU
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 3072
+                      memoryTotal: "8585740288"
+                      name: NVIDIA GeForce RTX 4060 Laptop GPU
+                      uuid: GPU-0e9cd5ff-3475-26b1-0b76-ddcb4ad49007
+                host: mattia-LOQ-15IRX9
+                memory:
+                    total: "16454856704"
+                os: Linux-7.0.0-34-generic-x86_64-with-glibc2.39
+                program: /home/mattia/Documenti/Tesi/ts_classification_project/src/federated/fedhydra.py
+                python: CPython 3.12.3
+                root: /home/mattia/Documenti/Tesi/ts_classification_project
+                startedAt: "2026-10-18T11:52:00.796844Z"
+                writerId: xtoc21bi0m86fn1ut5iqt54kaybck9es
+        m: []
+        python_version: 3.12.3
+        t:
+            "1":
+                - 1
+                - 5
+                - 53
+            "2":
+                - 1
+                - 5
+                - 53
+            "3":
+                - 2
+                - 13
+                - 15
+            "4": 3.12.3
+            "5": 0.30.0
+            "12": 0.30.0
+            "13": linux-x86_64

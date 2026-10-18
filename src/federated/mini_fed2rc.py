@@ -329,7 +329,7 @@ for ds_name in list_of_datasets:
         test_f1 = f1_score(Y_test, y_pred, average = 'macro')
 
     print(f"\n--- FED2RC --- Test Accuracy: {accuracy:.4f}, Test F1: {test_f1}, Number of unique seeds: {n_kernels}")
-    csv_path = 'results/fed2rc_metrics/minifed2rc_results.csv'
+    csv_path = 'results/federated_metrics/minifed2rc_results.csv'
     os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     file_exists = os.path.isfile(csv_path)
     

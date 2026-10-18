@@ -1,0 +1,50 @@
+SEED 1
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 1.0000, Test F1: 1.0, Number of unique seeds: 8
+SEED 2
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 1.0000, Test F1: 1.0, Number of unique seeds: 8
+SEED 3
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 1.0000, Test F1: 1.0, Number of unique seeds: 8
+SEED 4
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 1.0000, Test F1: 1.0, Number of unique seeds: 8
+SEED 5
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 1.0000, Test F1: 1.0, Number of unique seeds: 8

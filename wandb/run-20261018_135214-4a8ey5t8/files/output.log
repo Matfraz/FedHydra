@@ -1,0 +1,56 @@
+SEED 1
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 6
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+=== Round 4 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 0.5120, Test F1: 0.49586776859504134, Number of unique seeds: 8
+SEED 2
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 3
+
+=== Round 4 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 3
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 0.5560, Test F1: 0.5355648535564853, Number of unique seeds: 8
+SEED 3
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 0.5320, Test F1: 0.5411764705882353, Number of unique seeds: 8
+SEED 4
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 5
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 3
+
+=== Round 4 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 3
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 0.5720, Test F1: 0.5596707818930041, Number of unique seeds: 8
+SEED 5
+
+=== Round 1 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 8
+
+=== Round 2 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+=== Round 3 ===, Mean Train Accuracy: 1.0000, Number of unique seeds: 4
+
+ Convergence achieved: Seeds unchanged for 2 consecutive epochs. Training terminated.
+Test Accuracy: 0.6000, Test F1: 0.6031746031746031, Number of unique seeds: 8

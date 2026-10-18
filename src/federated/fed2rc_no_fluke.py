@@ -307,7 +307,7 @@ def main():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_kernels})
-            csv_path = 'results/fed2rc_metrics/fed2rc_results.csv'
+            csv_path = 'results/federated_metrics/fed2rc_results.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             
