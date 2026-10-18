@@ -157,13 +157,13 @@ def hydra():
                 #l server virtuale prende l'urna globale piena dei seed vincenti proposti da tutti i nodi e usa np.unique per eliminare i doppion
                 round_selected_seeds = np.unique(round_selected_seeds)
                
-                final_num_kernels = len(round_selected_seeds)
+                final_num_groups = len(round_selected_seeds)
                 # Calcola e salva la media delle accuratezze riportate dai client per avere un'idea di come sta andando l'addestramento globale.
                 mean_train_accuracy = np.mean(train_accuracies)
 
 
                 #monitoraggio, l'interruzione intelligente (early stopping) e la ridistribuzione della conoscenza.
-                print(f"\n=== Round {epoch + 1} ===, Mean Train Accuracy: {mean_train_accuracy:.4f}, Number of unique seeds: {final_num_kernels}")
+                print(f"\n=== Round {epoch + 1} ===, Mean Train Accuracy: {mean_train_accuracy:.4f}, Number of unique seeds: {final_num_groups}")
 
                 if previous_seeds is not None and np.array_equal(previous_seeds, round_selected_seeds):
                     consecutive_same_seeds += 1
@@ -273,13 +273,13 @@ def hydra():
                             f'Test F1 using a regularizer coming from a validation set ({experiment_seed})': test_f1,
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
-                            f'Kernels': final_num_kernels})
+                            f'Kernels': final_num_groups})
             else:
                 wandb.log({f'Test Accuracy ({experiment_seed})': test_accuracy,
                             f'Test F1 ({experiment_seed})': test_f1,
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
-                            f'Kernels': final_num_kernels})
+                            f'Kernels': final_num_groups})
             csv_path = 'results/federated_metrics/fedhydra_results.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
@@ -287,8 +287,8 @@ def hydra():
             with open(csv_path, mode='a', newline='') as f:
                 writer = csv.writer(f)
                 if not file_exists:
-                    writer.writerow(["Dataset", "Seed", "Test_Accuracy", "Test_F1", "Rounds_to_Converge", "Final_Kernels"])
-                writer.writerow([ds_name, experiment_seed, test_accuracy, test_f1, epoch, final_num_kernels])
+                    writer.writerow(["Dataset", "Seed", "Test_Accuracy", "Test_F1", "Rounds_to_Converge", "Final_Groups"])
+                writer.writerow([ds_name, experiment_seed, test_accuracy, test_f1, epoch, final_num_groups])
         wandb.finish()
             
 if __name__ == '__main__':
