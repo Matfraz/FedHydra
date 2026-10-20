@@ -128,7 +128,7 @@ def hydra():
                     # Il client legge quali seed (filtri) gli sono stati assegnati per questo round.
                     client_seeds = dict_seeds[client_id]
                     # Applica la trasformazione Hydra (transform_seeds) per convertire le sue serie temporali in feature numeriche basate su quei filtr
-                    x_trans = hydra_transform_seeds(x_train, client_seeds, ts_length)
+                    x_trans = hydra_transform_seeds(x_train, client_seeds, n_kernels,ts_length)
 
                     model = RidgeClassifierCV(alphas=np.logspace(-3,0,100)).fit(x_trans, y_train)
                     
@@ -187,7 +187,7 @@ def hydra():
                 # ora questi seed non sono più casuali, ma sono la lista finale dei kernel migliori condivisa da tutti
                 client_seeds = dict_seeds[client_id]
             
-                x_trans = hydra_transform_seeds(x_train, client_seeds, ts_length)  
+                x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
 
                 # Converte le etichette (es. la classe 2) in formato "One-Hot" (es. [0, 0, 1]
                 y_onehot = np.eye(n_classes)[y_train]
@@ -222,10 +222,10 @@ def hydra():
                     _, x_val, _, y_val = train_test_split(x_train, y_train, test_size = 0.1, random_state=experiment_seed)
                 
                 client_seeds = dict_seeds[client_id]
-                x_trans = hydra_transform_seeds(x_train, client_seeds, ts_length)  
+                x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
                 
                 if args.validation:
-                    x_trans = hydra_transform_seeds(x_val, client_seeds, ts_length)
+                    x_trans = hydra_transform_seeds(x_val, client_seeds, n_kernels, ts_length)
                 
                 y_onehot = np.eye(n_classes)[y_train]
 
@@ -258,7 +258,7 @@ def hydra():
             A_final = A_global + np.sum(local_best_lambdas)/np.sum(local_best_accs) * np.eye(A_global.shape[0])
             W_final = np.linalg.solve(A_final, b_global)
             W_final =  W_final / (np.linalg.norm(W_final, axis=0, keepdims=True) + 1e-10)
-            X_test_trans = hydra_transform_seeds(X_test, round_selected_seeds, ts_length)
+            X_test_trans = hydra_transform_seeds(X_test, round_selected_seeds, n_kernels, ts_length)
             y_pred = np.argmax(X_test_trans @ W_final, axis=1)
             test_accuracy = accuracy_score(Y_test, y_pred)
             if n_classes == 2:

@@ -25,8 +25,8 @@ class RocketKernel:
 
 
 class HydraGroup:
-    def __init__(self, seed, ts_length):
-        self.hydra = HydraTransformer(n_kernels = 8, n_groups = 1, random_state = int(seed))
+    def __init__(self, seed, n_kernels, ts_length):
+        self.hydra = HydraTransformer(n_kernels = n_kernels, n_groups = 1, random_state = int(seed))
         self.hydra.fit(np.zeros((1, 1, ts_length)))
 
     def transform(self, X):
@@ -37,8 +37,8 @@ class HydraGroup:
 
         return X_transformed
 
-def hydra_transform_seeds(X, seeds, ts_length):
-    K = [HydraGroup(int(seed), ts_length) for seed in seeds]
+def hydra_transform_seeds(X, seeds, n_kernels, ts_length):
+    K = [HydraGroup(int(seed),n_kernels, ts_length) for seed in seeds]
     return np.concatenate([k.transform(X) for k in K], axis=1)
 
 def transform_seeds(X, seeds, ts_length):

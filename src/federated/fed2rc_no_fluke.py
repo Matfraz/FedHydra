@@ -139,7 +139,7 @@ def main():
             ts_length = len(X_train[0])
             n_classes = len(np.unique(Y_train))
             #Inizializzazione fisica dei Kernel ROCKET
-            kernels = [[RocketKernel(seed=int(seed), ts_length=ts_length, ppv_only=True) for seed in dict_seeds[client_id]] for client_id in range(n_clients)]
+            #kernels = [[RocketKernel(seed=int(seed), ts_length=ts_length, ppv_only=True) for seed in dict_seeds[client_id]] for client_id in range(n_clients)]
 
             #variabili di tracciamento e controllo.
             best_accuracy = 0
@@ -307,7 +307,7 @@ def main():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_kernels})
-            csv_path = 'results/federated_metrics/fed2rc_results.csv'
+            csv_path = 'results/federated_metrics/fed2rc_results_2.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             
