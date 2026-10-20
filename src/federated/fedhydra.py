@@ -280,7 +280,7 @@ def hydra():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_groups})
-            csv_path = 'results/federated_metrics/fedhydra_results_1seed_8kernel.csv'
+            csv_path = 'results/federated_metrics/fedhydra_results.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             
