@@ -32,7 +32,7 @@ n_groups = args.groups
 
 
 top_k_per_client = (n_groups * 1) // n_clients
-EXPERIMENT_SEEDS = [1,2,3,4,5]
+EXPERIMENT_SEEDS = [42]
 
 def hydra():
     #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
@@ -280,7 +280,7 @@ def hydra():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_groups})
-            csv_path = 'results/federated_metrics/fedhydra_results.csv'
+            csv_path = 'results/federated_metrics/fedhydra_results_1seed_8kernel.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             
