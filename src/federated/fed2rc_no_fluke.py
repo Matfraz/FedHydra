@@ -32,7 +32,7 @@ n_rounds = args.rounds
 
 # quanti dei migliori kernel ogni client potrà selezionare
 top_k_per_client = (n_kernels * 1) // n_clients
-EXPERIMENT_SEEDS = [42]
+EXPERIMENT_SEEDS = [1,2,3,4,5]
 
 def main():
     #list_of_datasets = get_binary_dataset_names()
@@ -307,7 +307,7 @@ def main():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_kernels})
-            csv_path = 'results/federated_metrics/fed2rc_results_2.csv'
+            csv_path = 'results/federated_metrics/fed2rc_results_5seeds_10kkernel_2.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             

@@ -7,3 +7,5 @@ fedhydra_results_5seeds_8kernel.csv tempo ex = circa 1.5h / 2h significa indicat
 fedhydra_results_1seeds_8kernel.csv tempo ex =  circa 26 min velocissimi i round lentissima fase post convergenza
 
 fed2rc_results_1seeds_10kkernel_2.csv tempo ex = circa 30 min (di cui 14 min per Car ma solo 10 sec per Coffee)
+
+fed2rc_results_5seeds_10kkernel.csv tempo ex = 1h e 39 min 
