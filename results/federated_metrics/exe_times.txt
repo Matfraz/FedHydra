@@ -1,3 +1,5 @@
+Per seeds si intendono gli experiments seed di default erano [1,2,3,4,5]:
+
 fedhydra_results_5seeds_1kernel.csv tempo ex = circa 5/6 min
 
 fedhydra_results_5seeds_8kernel.csv tempo ex = circa 1.5h / 2h significa indicativamente 25 min a seed
