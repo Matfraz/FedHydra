@@ -45,6 +45,34 @@ def transform_seeds(X, seeds, ts_length):
     K = [RocketKernel(int(seed), ts_length, ppv_only=True) for seed in seeds]
     return np.concatenate([k.transform(X) for k in K], axis=1)
 
+class SparseScaler:
+    """Sparse Scaler for hydra transform."""
+
+    def __init__(self, mask=True, exponent=4):
+        self.mask = mask
+        self.exponent = exponent
+
+    def fit(self, X, y=None):
+        X = X.clamp(0).sqrt()
+
+        self.epsilon = (X == 0).float().mean(0) ** self.exponent + 1e-8
+
+        self.mu = X.mean(0)
+        self.sigma = X.std(0) + self.epsilon
+
+    def transform(self, X, y=None):
+        X = X.clamp(0).sqrt()
+
+        if self.mask:
+            return ((X - self.mu) * (X != 0)) / self.sigma
+        else:
+            return (X - self.mu) / self.sigma
+
+    def fit_transform(self, X, y=None):
+        self.fit(X)
+        return self.transform(X)
+
+
 
 def get_binary_dataset_names():
     return [

@@ -8,12 +8,12 @@ import os
 import csv
 
 from sklearn.linear_model import RidgeClassifier
-from aeon.classification.convolution_based import HydraClassifier
+from aeon.transformations.collection.convolution_based._hydra import HydraTransformer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.model_selection import train_test_split
-from utils import load_dataset, preprocess_data, split_function, RocketKernel, transform_seeds, get_binary_dataset_names, get_three_classes_dataset_names, get_four_classes_dataset_names, get_multiclasses_dataset_names, HydraGroup, hydra_transform_seeds
+from utils import load_dataset, preprocess_data, split_function, RocketKernel,transform_seeds, get_binary_dataset_names, get_three_classes_dataset_names, get_four_classes_dataset_names, get_multiclasses_dataset_names, HydraGroup, hydra_transform_seeds, SparseScaler
 from sklearn.preprocessing import LabelBinarizer
 
 parser = argparse.ArgumentParser()
@@ -130,14 +130,17 @@ def hydra():
                     # Applica la trasformazione Hydra (transform_seeds) per convertire le sue serie temporali in feature numeriche basate su quei filtr
                     x_trans = hydra_transform_seeds(x_train, client_seeds, n_kernels,ts_length)
 
-                    model = RidgeClassifierCV(alphas=np.logspace(-3,0,100)).fit(x_trans, y_train)
+                    # Normalizzazione tramite SparseScaler
+                    x_trans_normalized = SparseScaler.fit_transform(x_trans)
+
+                    model = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10)).fit(x_trans_normalized, y_train)
                     
                     w = np.sum(np.abs(model.coef_), axis=0) if model.coef_.ndim > 1 else np.abs(model.coef_)
-                    train_acc = model.score(x_trans, y_train)
+                    train_acc = model.score(x_trans_normalized, y_train)
                     train_accuracies = np.concatenate([train_accuracies, [train_acc]])
                     
                     num_seeds = len(client_seeds)
-                    features_per_group = x_trans.shape[1] // num_seeds
+                    features_per_group = x_trans_normalized.shape[1] // num_seeds
 
                     # Calcola quante feature produce ogni singolo HydraGroup
                     seed_scores = np.zeros(num_seeds)
@@ -179,22 +182,46 @@ def hydra():
                 for client_id in range(n_clients):
                     dict_seeds[client_id] = round_selected_seeds.copy()
 
-            A_global = None
-            b_global = None
-            A_locals, b_locals = [], []
+            
+            sum_columns = []
+            sum_squared = []
+            N_samples = []
+            list_x_trans = []
             for client_id in range(n_clients):
                 x_train, y_train = s_X_train[client_id], s_Y_train[client_id]
                 # ora questi seed non sono più casuali, ma sono la lista finale dei kernel migliori condivisa da tutti
                 client_seeds = dict_seeds[client_id]
             
                 x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
+                list_x_trans.append(x_trans)
 
+                sum_columns[client_id].append(np.sum(x_trans, axis=0))
+                sum_squared[client_id].append(np.square(x_trans, axis = 0))
+                N_samples[client_id].append(len(x_trans))
+
+            for client_id in range(n_clients):
+                sum_global += sum_columns[client_id]
+                sum_squared_global += sum_squared[client_id]
+                N_samples_global += N_samples[client_id]
+
+            varianza_global = (sum_squared_global / N_samples_global) - np.square(sum_global / N_samples_global)
+
+            dev_standard_global = np.sqrt(varianza_global) + 1e-10  #1e-10 per evitare il crash se proviamo a dividere per zero (quando una feature è tutta a zero)
+
+            A_global = None
+            b_global = None
+            A_locals, b_locals = [], []
+
+            for client_id in range(n_clients):
+                x_trans = list_x_trans[client_id]
+                y_train = s_Y_train[client_id]
+                
+                x_trans_scaled = x_trans / dev_standard_global
                 # Converte le etichette (es. la classe 2) in formato "One-Hot" (es. [0, 0, 1]
                 y_onehot = np.eye(n_classes)[y_train]
-
                 # Impossibile fare il processo inverso
-                A_local = x_trans.T @ x_trans  # Matrice di covarianza delle feature
-                b_local = x_trans.T @ y_onehot # Correlazione tra feature e classi (Z^T * Y)
+                A_local = x_trans_scaled.T @ x_trans_scaled  # Matrice di covarianza delle feature
+                b_local = x_trans_scaled.T @ y_onehot # Correlazione tra feature e classi (Z^T * Y)
 
                 # Se è il primo client, capiamo la dimensione REALE delle feature e creiamo le matrici globali
                 if A_global is None:
@@ -233,7 +260,7 @@ def hydra():
                 b_minus_client = b_global - b_locals[client_id]
 
                 # Ridge a mano 
-                for cv_lambda in np.logspace(-3,0,100):
+                for cv_lambda in np.logspace(-3, 3, 10):
                     if args.validation == False:
                         local_A_final = A_minus_client + cv_lambda * np.eye(A_global.shape[0])
                         local_W_final = np.linalg.solve(local_A_final, b_minus_client)
