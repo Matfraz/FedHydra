@@ -33,7 +33,7 @@ n_groups = args.groups
 
 
 top_k_per_client = (n_groups * 1) // n_clients
-EXPERIMENT_SEEDS = [1,2,3,4,5]
+EXPERIMENT_SEEDS = [42]
 
 def hydra():
     #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
@@ -155,6 +155,8 @@ def hydra():
 
                         group_weights = w[start_idx:end_idx]
                         seed_scores[i] = np.sum(np.abs(group_weights))
+                        #seed_scores[i] = np.max(np.abs(group_weights))
+                        #seed_scores[i] = np.sum(np.sort(np.abs(group_weights))[-5:])
                     
                     top_k_idx = np.argsort(-seed_scores)[:top_k_per_client]
                     top_k_seeds = client_seeds[top_k_idx]
