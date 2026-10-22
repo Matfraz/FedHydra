@@ -1,0 +1,6 @@
+Questi codici sono post normalizzazione e opt lambda
+
+fedhydra_1seed_8kernel: 3 min
+fedhydra_5seed_8kernel: 15 min
+
+

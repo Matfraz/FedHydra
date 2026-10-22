@@ -6,6 +6,7 @@ import argparse
 import itertools
 import os
 import csv
+import torch
 
 from sklearn.linear_model import RidgeClassifier
 from aeon.transformations.collection.convolution_based._hydra import HydraTransformer
@@ -131,7 +132,11 @@ def hydra():
                     x_trans = hydra_transform_seeds(x_train, client_seeds, n_kernels,ts_length)
 
                     # Normalizzazione tramite SparseScaler
-                    x_trans_normalized = SparseScaler.fit_transform(x_trans)
+                    x_trans_tensor = torch.tensor(x_trans, dtype=torch.float32)
+                    scaler = SparseScaler()
+                    x_trans_scaled_tensor = scaler.fit_transform(x_trans_tensor)
+
+                    x_trans_normalized = x_trans_scaled_tensor.numpy()
 
                     model = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10)).fit(x_trans_normalized, y_train)
                     
@@ -195,10 +200,14 @@ def hydra():
                 x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
                 list_x_trans.append(x_trans)
 
-                sum_columns[client_id].append(np.sum(x_trans, axis=0))
-                sum_squared[client_id].append(np.square(x_trans, axis = 0))
-                N_samples[client_id].append(len(x_trans))
+                sum_columns.append(np.sum(x_trans, axis=0))
+                sum_squared.append(np.sum(np.square(x_trans), axis=0))
+                N_samples.append(len(x_trans))
 
+            
+            sum_global = 0
+            sum_squared_global = 0
+            N_samples_global = 0
             for client_id in range(n_clients):
                 sum_global += sum_columns[client_id]
                 sum_squared_global += sum_squared[client_id]
@@ -259,14 +268,21 @@ def hydra():
                 A_minus_client = A_global - A_locals[client_id]
                 b_minus_client = b_global - b_locals[client_id]
 
-                # Ridge a mano 
+                if args.validation == False:
+                    target_A = A_minus_client
+                    target_b = b_minus_client
+                else:
+                    target_A = A_global
+                    target_b = b_global
+
+                A_values, A_vectors = np.linalg.eigh(target_A)
+
+                c = A_vectors.T @ target_b
+
                 for cv_lambda in np.logspace(-3, 3, 10):
-                    if args.validation == False:
-                        local_A_final = A_minus_client + cv_lambda * np.eye(A_global.shape[0])
-                        local_W_final = np.linalg.solve(local_A_final, b_minus_client)
-                    else:
-                        local_A_final = A_global + cv_lambda * np.eye(A_global.shape[0])
-                        local_W_final = np.linalg.solve(local_A_final, b_global)
+                    reg_eigenvalues = A_values[:, np.newaxis] + cv_lambda
+                    spectral_weights = c / reg_eigenvalues
+                    local_W_final = A_vectors @ spectral_weights
                     
                     local_W_final =  local_W_final / (np.linalg.norm(local_W_final, axis=0, keepdims=True) + 1e-10)
                     local_y_pred = np.argmax(x_trans @ local_W_final, axis=1)

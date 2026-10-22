@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import random
+import torch
 from sktime.transformations.panel.rocket import Rocket
 from sklearn.preprocessing import LabelEncoder
 from aeon.transformations.collection.convolution_based import HydraTransformer

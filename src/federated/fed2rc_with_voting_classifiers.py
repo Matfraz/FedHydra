@@ -28,7 +28,7 @@ n_clients = args.clients
 n_kernels = args.kernels
 n_rounds = args.rounds
 top_k_per_client = (n_kernels * 1) // n_clients
-EXPERIMENT_SEEDS = [1,2,3,4,5]
+EXPERIMENT_SEEDS = [42]
 
 def main():
     #list_of_datasets = get_binary_dataset_names()
@@ -36,7 +36,8 @@ def main():
     #list_of_datasets = get_four_classes_dataset_names()
     #list_of_datasets = get_multiclasses_dataset_names()
     #list_of_datasets = ['PigCVP'] #example
-    list_of_datasets = get_binary_dataset_names() + get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
+    #list_of_datasets = get_binary_dataset_names() + get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
+    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
 
     if args.debug:
         wandb.init(mode="disabled")
@@ -45,11 +46,11 @@ def main():
 
     # All the runs
     run_names = []
-    runs = wandb.Api().runs("mlgroup/Fed2RC")
-    for run in runs:
-        run_names.append(run.name)
+    #runs = wandb.Api().runs("mlgroup/Fed2RC")
+    #for run in runs:
+    #    run_names.append(run.name)
     #print("RUN NAMES DONE: ", run_names)
-    wandb.finish()
+    #wandb.finish()
 
     for ds_name in list_of_datasets:
         print('DATASET', ds_name)
@@ -126,6 +127,7 @@ def main():
                     client_seeds = dict_seeds[client_id]
                     x_trans = transform_seeds(x_train, client_seeds, ts_length)
                     model = RidgeClassifierCV(alphas=np.logspace(-3,0,100)).fit(x_trans, y_train)
+                    train_acc = model.score(x_trans, y_train)
                     if model.coef_.shape[0] == 1:  # Binary classification: extract kernels associated to largest squared weights
                         w = model.coef_[0]
                         top_k_idx = np.argsort(-np.abs(w))[:top_k_per_client]
@@ -145,7 +147,7 @@ def main():
                     
                 round_selected_seeds = np.unique(round_selected_seeds)
                 final_num_kernels = len(round_selected_seeds)
-                mean_train_accuracy = np.mean(train_accuracies)
+                mean_train_accuracy = np.mean(train_accs)
                     
                 print(f"\n=== Round {epoch + 1} ===, Mean Train Accuracy: {mean_train_accuracy:.4f}, Number of unique seeds: {final_num_kernels}")
                     
@@ -243,6 +245,16 @@ def main():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_kernels})
+            csv_path = 'results/federated_metrics/fed2rc_wvc_results.csv'
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            file_exists = os.path.isfile(csv_path)
+            
+            with open(csv_path, mode='a', newline='') as f:
+                writer = csv.writer(f)
+                if not file_exists:
+                    writer.writerow(["Dataset", "Seed", "Test_Accuracy", "Test_F1", "Rounds_to_Converge", "Final_Kernels"])
+                writer.writerow([ds_name, experiment_seed, test_accuracy, test_f1, epoch, final_num_kernels])
+
         wandb.finish()
 
 if __name__ == '__main__':
