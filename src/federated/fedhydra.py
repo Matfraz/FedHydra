@@ -32,7 +32,7 @@ n_rounds = args.rounds
 n_groups = args.groups
 
 
-top_k_per_client = (n_groups * 1) // n_clients
+top_k_per_client = max(1, (n_groups * 1) // n_clients)
 EXPERIMENT_SEEDS = [42]
 
 def hydra():
@@ -215,9 +215,13 @@ def hydra():
                 sum_squared_global += sum_squared[client_id]
                 N_samples_global += N_samples[client_id]
 
-            varianza_global = (sum_squared_global / N_samples_global) - np.square(sum_global / N_samples_global)
+            varianza_global_grezza = (sum_squared_global / N_samples_global) - np.square(sum_global / N_samples_global)
 
-            dev_standard_global = np.sqrt(varianza_global) + 1e-10  #1e-10 per evitare il crash se proviamo a dividere per zero (quando una feature è tutta a zero)
+            #se numero è sceso sotto zero per errori di virgola mobile, lo forziamo a 0.0
+            varianza_global_safe = np.maximum(0.0, varianza_global_grezza)
+            dev_standard_global = np.sqrt(varianza_global_safe)
+            const_mask = dev_standard_global < 1e-8
+            dev_standard_global = np.where(const_mask, 1.0, dev_standard_global)
 
             A_global = None
             b_global = None
@@ -228,6 +232,7 @@ def hydra():
                 y_train = s_Y_train[client_id]
                 
                 x_trans_scaled = x_trans / dev_standard_global
+                x_trans_scaled[:, const_mask] = 0.0
                 # Converte le etichette (es. la classe 2) in formato "One-Hot" (es. [0, 0, 1]
                 y_onehot = np.eye(n_classes)[y_train]
                 # Impossibile fare il processo inverso
@@ -261,9 +266,12 @@ def hydra():
                 
                 client_seeds = dict_seeds[client_id]
                 x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
-                
+                x_trans = x_trans / dev_standard_global
+                x_trans[:, const_mask] = 0.0
                 if args.validation:
                     x_trans = hydra_transform_seeds(x_val, client_seeds, n_kernels, ts_length)
+                    x_trans = x_trans / dev_standard_global
+                    x_trans[:, const_mask] = 0.0
                 
                 y_onehot = np.eye(n_classes)[y_train]
 
@@ -300,10 +308,13 @@ def hydra():
                 local_best_lambdas = np.concatenate([local_best_lambdas, [tmp_lambda * best_accuracy]])
                 local_best_accs = np.concatenate([local_best_accs, [best_accuracy]])
 
-            A_final = A_global + np.sum(local_best_lambdas)/np.sum(local_best_accs) * np.eye(A_global.shape[0])
+            lam = np.sum(local_best_lambdas) / max(np.sum(local_best_accs), 1e-12)
+            A_final = A_global + lam * np.eye(A_global.shape[0])
             W_final = np.linalg.solve(A_final, b_global)
             W_final =  W_final / (np.linalg.norm(W_final, axis=0, keepdims=True) + 1e-10)
             X_test_trans = hydra_transform_seeds(X_test, round_selected_seeds, n_kernels, ts_length)
+            X_test_trans = X_test_trans / dev_standard_global
+            X_test_trans[:, const_mask] = 0.0
             y_pred = np.argmax(X_test_trans @ W_final, axis=1)
             test_accuracy = accuracy_score(Y_test, y_pred)
             if n_classes == 2:
@@ -311,7 +322,7 @@ def hydra():
             else:
                 test_f1 = f1_score(Y_test, y_pred, average = 'macro')
 
-            print(f"Test Accuracy: {test_accuracy:.4f}, Test F1: {test_f1}, Number of unique seeds: {n_kernels}")
+            print(f"Test Accuracy: {test_accuracy:.4f}, Test F1: {test_f1}, Number of unique seeds: {final_num_groups}")
 
             if args.validation:    
                 wandb.log({f'Test Accuracy using a regularizer coming from a validation set ({experiment_seed})': test_accuracy,

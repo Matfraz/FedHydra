@@ -1,6 +1,19 @@
 Questi codici sono post normalizzazione e opt lambda
 
-fedhydra_1seed_8kernel: 3 min
-fedhydra_5seed_8kernel: 15 min
+fedhydra_1s_64k_1g: 1 min
+fedhydra_1s_1k_64g: 2 min
+fedhydra_1s_8k_64g: 4 min
 
+fedhydra_1s_2k_64g: 1 min
+fedhydra_1s_4k_64g: 1 min
 
+fedhydra_1s_8k_2g:30 sec
+fedhydra_1s_8k_8g: 40 sec
+fedhydra_1s_8k_16g:50 sec
+fedhydra_1s_8k_32g: 1 min
+
+fedhydra_1s_2k_32g: 1 min
+fedhydra_1s_4k_16g: 1 min
+
+fedhydra_1s_8k_64g_1r: (r = round) 10 min
+fedhydra_1s_1k_64g_1r: 1 min

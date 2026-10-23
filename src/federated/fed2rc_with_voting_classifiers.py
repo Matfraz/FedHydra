@@ -5,6 +5,7 @@ import wandb
 import argparse
 import itertools
 import os
+import csv
 
 from sklearn.linear_model import RidgeClassifier
 from sktime.transformations.panel.rocket import Rocket
@@ -132,10 +133,11 @@ def main():
                         w = model.coef_[0]
                         top_k_idx = np.argsort(-np.abs(w))[:top_k_per_client]
                     else:  # Multiclass classification: softmax over the weights to extract kernels as voting. 
-                        votes = np.zeros((n_classes,n_kernels), dtype=float)
+                        current_n_kernels = model.coef_.shape[-1]
+                        votes = np.zeros((n_classes, current_n_kernels), dtype=float)
                         for class_idx in range(n_classes):
                             w_class = np.abs(model.coef_[class_idx])
-                            w_class_normalized = np.exp(w_class)/sum(np.exp(w_class))
+                            w_class_normalized = np.exp(w_class)/np.sum(np.exp(w_class))
                             votes[class_idx] = w_class_normalized
                         kernel_votes = np.mean(votes, axis=0)
                         sorted_kernel_votes = np.argsort(-kernel_votes)
