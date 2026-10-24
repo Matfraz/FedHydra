@@ -1,5 +1,8 @@
 Questi codici sono post normalizzazione e opt lambda
 
+fed2rc_wvc_1s_512k_1r: 1 min
+fed2rc_wvc_1s_512k: 33
+
 fedhydra_1s_64k_1g: 1 min
 fedhydra_1s_1k_64g: 2 min
 fedhydra_1s_8k_64g: 4 min
