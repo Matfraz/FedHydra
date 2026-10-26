@@ -6,6 +6,7 @@ import argparse
 import itertools
 import os
 import csv
+import time
 
 from sklearn.linear_model import RidgeClassifier
 from sktime.transformations.panel.rocket import Rocket
@@ -319,4 +320,7 @@ def main():
         wandb.finish()
 
 if __name__ == '__main__':
+    t0 = time.perf_counter()
     main()
+    elapsed = time.perf_counter() - t0
+    print(f"\nTempo totale: {elapsed:.1f} s ({elapsed / 60:.1f} min)")

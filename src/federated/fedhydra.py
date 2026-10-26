@@ -7,6 +7,7 @@ import itertools
 import os
 import csv
 import torch
+import time
 
 from sklearn.linear_model import RidgeClassifier
 from aeon.transformations.collection.convolution_based._hydra import HydraTransformer
@@ -37,7 +38,7 @@ EXPERIMENT_SEEDS = [42]
 
 def hydra():
     #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
+    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
 
     if args.debug:
             wandb.init(mode="disabled")
@@ -190,49 +191,48 @@ def hydra():
                     dict_seeds[client_id] = round_selected_seeds.copy()
 
             
-            sum_columns = []
-            sum_squared = []
-            N_samples = []
             list_x_trans = []
+            sum_s = []
+            sum_s_squared = []
+            sum_zeros = []
+            N_samples = []
             for client_id in range(n_clients):
                 x_train, y_train = s_X_train[client_id], s_Y_train[client_id]
-                # ora questi seed non sono più casuali, ma sono la lista finale dei kernel migliori condivisa da tutti
                 client_seeds = dict_seeds[client_id]
-            
-                x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
+ 
+                x_trans = hydra_transform_seeds(x_train, client_seeds, n_kernels, ts_length)
                 list_x_trans.append(x_trans)
 
-                sum_columns.append(np.sum(x_trans, axis=0))
-                sum_squared.append(np.sum(np.square(x_trans), axis=0))
-                N_samples.append(len(x_trans))
+                s = np.sqrt(np.maximum(np.asarray(x_trans, dtype=np.float64), 0.0))   # = X.clamp(0).sqrt()
+                sum_s.append(np.sum(s, axis=0))
+                sum_s_squared.append(np.sum(np.square(s), axis=0))
+                sum_zeros.append(np.sum(s == 0, axis=0))
+                N_samples.append(len(s))
 
             
-            sum_global = 0
-            sum_squared_global = 0
-            N_samples_global = 0
-            for client_id in range(n_clients):
-                sum_global += sum_columns[client_id]
-                sum_squared_global += sum_squared[client_id]
-                N_samples_global += N_samples[client_id]
-
-            varianza_global_grezza = (sum_squared_global / N_samples_global) - np.square(sum_global / N_samples_global)
-
-            #se numero è sceso sotto zero per errori di virgola mobile, lo forziamo a 0.0
-            varianza_global_safe = np.maximum(0.0, varianza_global_grezza)
-            dev_standard_global = np.sqrt(varianza_global_safe)
-            const_mask = dev_standard_global < 1e-8
-            dev_standard_global = np.where(const_mask, 1.0, dev_standard_global)
+            N_samples_global = np.sum(N_samples)
+            sum_s_global = np.sum(sum_s, axis=0)
+            sum_s_squared_global = np.sum(sum_s_squared, axis=0)
+            sum_zeros_global = np.sum(sum_zeros, axis=0)
+ 
+            mu_global = sum_s_global / N_samples_global
+            # varianza campionaria (denominatore n-1, come torch.std); np.maximum evita negativi da arrotondamento
+            varianza_global = np.maximum(0.0, (sum_s_squared_global - N_samples_global * np.square(mu_global)) / (N_samples_global - 1))
+            epsilon_global = (sum_zeros_global / N_samples_global) ** 4 + 1e-8
+            sigma_global = np.sqrt(varianza_global) + epsilon_global
+            # mu_global, sigma_global vengono rimandati a tutti i client
 
             A_global = None
             b_global = None
-            A_locals, b_locals = [], []
+            A_locals, b_locals, list_x_scaled = [], [], []
 
             for client_id in range(n_clients):
-                x_trans = list_x_trans[client_id]
                 y_train = s_Y_train[client_id]
-                
-                x_trans_scaled = x_trans / dev_standard_global
-                x_trans_scaled[:, const_mask] = 0.0
+ 
+                # Stessa trasformazione dello SparseScaler (mask=True), con i parametri globali
+                s = np.sqrt(np.maximum(np.asarray(list_x_trans[client_id], dtype=np.float64), 0.0))
+                x_trans_scaled = ((s - mu_global) * (s != 0)) / sigma_global
+                list_x_scaled.append(x_trans_scaled)
                 # Converte le etichette (es. la classe 2) in formato "One-Hot" (es. [0, 0, 1]
                 y_onehot = np.eye(n_classes)[y_train]
                 # Impossibile fare il processo inverso
@@ -255,35 +255,26 @@ def hydra():
             #cross validation for best lambda
             local_best_lambdas = np.array([])
             local_best_accs = np.array([])
-            tmp_lambda = 0
+            
 
             for client_id in range(n_clients):
+                tmp_lambda = 0
                 best_accuracy = 0
                 x_train, y_train = s_X_train[client_id], s_Y_train[client_id]
 
                 if args.validation:
                     _, x_val, _, y_val = train_test_split(x_train, y_train, test_size = 0.1, random_state=experiment_seed)
-                
-                client_seeds = dict_seeds[client_id]
-                x_trans = hydra_transform_seeds(x_train, client_seeds,n_kernels, ts_length)  
-                x_trans = x_trans / dev_standard_global
-                x_trans[:, const_mask] = 0.0
-                if args.validation:
-                    x_trans = hydra_transform_seeds(x_val, client_seeds, n_kernels, ts_length)
-                    x_trans = x_trans / dev_standard_global
-                    x_trans[:, const_mask] = 0.0
-                
-                y_onehot = np.eye(n_classes)[y_train]
-
-                A_minus_client = A_global - A_locals[client_id]
-                b_minus_client = b_global - b_locals[client_id]
-
-                if args.validation == False:
-                    target_A = A_minus_client
-                    target_b = b_minus_client
-                else:
+                    client_seeds = dict_seeds[client_id]
+                    x_val_trans = hydra_transform_seeds(x_val, client_seeds, n_kernels, ts_length)
+                    s = np.sqrt(np.maximum(np.asarray(x_val_trans, dtype=np.float64), 0.0))
+                    x_trans = ((s - mu_global) * (s != 0)) / sigma_global
                     target_A = A_global
                     target_b = b_global
+                else:
+                    # riusa le feature già trasformate e scalate, niente nuova trasformazione
+                    x_trans = list_x_scaled[client_id]
+                    target_A = A_global - A_locals[client_id]
+                    target_b = b_global - b_locals[client_id]
 
                 A_values, A_vectors = np.linalg.eigh(target_A)
 
@@ -313,8 +304,8 @@ def hydra():
             W_final = np.linalg.solve(A_final, b_global)
             W_final =  W_final / (np.linalg.norm(W_final, axis=0, keepdims=True) + 1e-10)
             X_test_trans = hydra_transform_seeds(X_test, round_selected_seeds, n_kernels, ts_length)
-            X_test_trans = X_test_trans / dev_standard_global
-            X_test_trans[:, const_mask] = 0.0
+            s = np.sqrt(np.maximum(np.asarray(X_test_trans, dtype=np.float64), 0.0))
+            X_test_trans = ((s - mu_global) * (s != 0)) / sigma_global
             y_pred = np.argmax(X_test_trans @ W_final, axis=1)
             test_accuracy = accuracy_score(Y_test, y_pred)
             if n_classes == 2:
@@ -348,4 +339,7 @@ def hydra():
         wandb.finish()
             
 if __name__ == '__main__':
+    t0 = time.perf_counter()
     hydra()
+    elapsed = time.perf_counter() - t0
+    print(f"\nTempo totale: {elapsed:.1f} s ({elapsed / 60:.1f} min)")

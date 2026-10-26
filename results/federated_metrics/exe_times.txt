@@ -1,0 +1,6 @@
+Esecuzione con 5 dataset:
+fedhydra_results_1s_8k_64g: 234.5 s
+fedhydra_1s_8k_64g_1r: 711.4 s (11.9 min)
+
+fed2rc_wvc_1s_512k: 
+fed2rc_wvc_1s_512k_1r: 

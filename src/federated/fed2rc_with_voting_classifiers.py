@@ -5,6 +5,7 @@ import wandb
 import argparse
 import itertools
 import os
+import time
 import csv
 
 from sklearn.linear_model import RidgeClassifier
@@ -38,7 +39,7 @@ def main():
     #list_of_datasets = get_multiclasses_dataset_names()
     #list_of_datasets = ['PigCVP'] #example
     #list_of_datasets = get_binary_dataset_names() + get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
+    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
 
     if args.debug:
         wandb.init(mode="disabled")
@@ -260,4 +261,7 @@ def main():
         wandb.finish()
 
 if __name__ == '__main__':
+    t0 = time.perf_counter()
     main()
+    elapsed = time.perf_counter() - t0
+    print(f"\nTempo totale: {elapsed:.1f} s ({elapsed / 60:.1f} min)")
