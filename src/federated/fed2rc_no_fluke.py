@@ -33,7 +33,7 @@ n_rounds = args.rounds
 
 # quanti dei migliori kernel ogni client potrà selezionare
 top_k_per_client = (n_kernels * 1) // n_clients
-EXPERIMENT_SEEDS = [1,2,3,4,5]
+EXPERIMENT_SEEDS = [42]
 
 def main():
     #list_of_datasets = get_binary_dataset_names()
@@ -43,7 +43,7 @@ def main():
     #list_of_datasets = ['PigCVP'] #example
     # Costruisce un'unica grande lista contenente i nomi di tutti i 
     # dataset disponibili nell'archivio UCR.
-    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
+    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal','Adiac']
 
     #Se è vera, dice esplicitamente alla libreria wandb di disattivarsi (mode="disabled"). 
     # In questo modo puoi far girare il codice sul tuo computer 
