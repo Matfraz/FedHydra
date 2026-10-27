@@ -4,6 +4,7 @@ import random
 import functools
 import os 
 import csv
+import time
 
 from functools import lru_cache
 from sklearn.linear_model import RidgeClassifier
@@ -199,10 +200,10 @@ def split_function(features, target, num_clients, random_state, my_split='unifor
     else:
         raise ValueError("Invalid split type. Choose 'continuous', 'uniform', or 'random'.")
 
-list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal']
+list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal','Adiac']
 n_clients = 4
 n_rounds = 100
-n_kernels = 84 #924 #9996
+n_kernels =  84  #9996 #924
 lambda_reg = 0.01
 n_important_weights = (n_kernels * 1) // n_clients
 top_k_per_client = (n_kernels * 1) // n_clients
@@ -211,6 +212,7 @@ np.random.seed(42)
 random.seed(42)
 myseed = 42
 
+t0 = time.perf_counter()
 for ds_name in list_of_datasets:
     print('DATASET', ds_name)
 
@@ -338,4 +340,7 @@ for ds_name in list_of_datasets:
         if not file_exists:
             writer.writerow(["Dataset", "Seed", "Test_Accuracy", "Test_F1", "Rounds_to_Converge", "Final_Kernels"])
         writer.writerow([ds_name, myseed, accuracy, test_f1, epoch, n_kernels])
-                
+
+
+elapsed = time.perf_counter() - t0
+print(f"\nTempo totale: {elapsed:.1f} s ({elapsed / 60:.1f} min)")
