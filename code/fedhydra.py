@@ -15,7 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.model_selection import train_test_split
-from utils import load_dataset, preprocess_data, split_function, RocketKernel,transform_seeds, get_binary_dataset_names, get_three_classes_dataset_names, get_four_classes_dataset_names, get_multiclasses_dataset_names, HydraGroup, hydra_transform_seeds, SparseScaler
+from utils import load_dataset, preprocess_data, split_function, RocketKernel,transform_seeds, get_binary_dataset_names, get_three_classes_dataset_names, get_four_classes_dataset_names, get_multiclasses_dataset_names, HydraGroup, hydra_transform_seeds, SparseScaler, split_data_dirichlet
 from sklearn.preprocessing import LabelBinarizer
 
 parser = argparse.ArgumentParser()
@@ -23,6 +23,8 @@ parser.add_argument('-c', '--clients', type=int, default=4, help='Choose the num
 parser.add_argument('-k', '--kernels', type=int, default=8, help='Choose the number of HYDRA kernels to use')
 parser.add_argument('-g', '--groups', type=int, default=64, help='Choose the number of HYDRA groups to use')
 parser.add_argument('-r', '--rounds', type=int, default=100, help='Choose the number of rounds of federated training')
+parser.add_argument('--split', choices=['iid', 'dirichlet'], default='iid')
+parser.add_argument('--alpha', type=float, default=0.5)
 parser.add_argument('-v', '--validation', action='store_true', help='Choose this option to enable a grid search for the lambda regularizer on a validation set.')
 parser.add_argument('--debug', action='store_true', help='Use this option to disable WandB metrics tracking')
 args = parser.parse_args()
@@ -31,7 +33,6 @@ n_clients = args.clients
 n_kernels = args.kernels
 n_rounds = args.rounds
 n_groups = args.groups
-
 
 top_k_per_client = max(1, (n_groups * 1) // n_clients)
 EXPERIMENT_SEEDS = [42]
@@ -85,7 +86,10 @@ def hydra():
 
 
             #partendo da un dataset unico (UCR Archive), il codice deve "frammentarlo" artificialmente e assegnarne un pezzo a ciascun finto client.
-            if ds_name in ["DiatomSizeReduction", "Fungi", "PigAirwayPressure", "PigArtPressure", "PigCVP"]:
+            if args.split == 'dirichlet':
+                split = 'dirichlet'
+                s_X_train, s_Y_train, s_X_test, s_Y_test = split_data_dirichlet( X_train, Y_train, X_test, Y_test, n_clients,alpha=args.alpha, seed=experiment_seed)
+            elif ds_name in ["DiatomSizeReduction", "Fungi", "PigAirwayPressure", "PigArtPressure", "PigCVP"]:
                 split = "random"
                 s_X_Y_train = split_function(X_train, Y_train, n_clients, rng, my_split=split)
                 s_X_Y_test = split_function(X_test, Y_test, n_clients, rng, my_split=split)
@@ -97,7 +101,8 @@ def hydra():
                 split='uniform'
                 s_X_train, s_Y_train = split_function(X_train, Y_train, n_clients, rng, my_split=split)
                 s_X_test, s_Y_test = split_function(X_test, Y_test, n_clients, rng, my_split=split)
-            
+
+    
             # Initialize different seeds for all clients
             # ogni client parte con un pacchetto di filtri iniziale unico.
             seeds = np.arange(n_clients * n_groups).reshape(n_clients, n_groups)
@@ -300,7 +305,6 @@ def hydra():
                 local_best_accs = np.concatenate([local_best_accs, [best_accuracy]])
 
             lam = np.sum(local_best_lambdas) / max(np.sum(local_best_accs), 1e-12)
-            print(lam)
             A_final = A_global + lam * np.eye(A_global.shape[0])
             W_final = np.linalg.solve(A_final, b_global)
             W_final =  W_final / (np.linalg.norm(W_final, axis=0, keepdims=True) + 1e-10)
@@ -328,7 +332,7 @@ def hydra():
                             f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_groups})
-            csv_path = 'results/federated_metrics/fedhydra_results.csv'
+            csv_path = 'results/fedhydra_results.csv'
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             

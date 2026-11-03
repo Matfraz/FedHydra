@@ -74,6 +74,69 @@ class SparseScaler:
         return self.transform(X)
 
 
+def split_data_dirichlet(train_features, train_targets, test_features, test_targets, num_clients, alpha=0.5, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    
+    num_classes = len(set(train_targets))
+    client_data = {i: {'train': {'features': [], 'targets': []},
+                      'test': {'features': [], 'targets': []}} for i in range(num_clients)}
+    
+    # Check if we have enough samples per class
+    min_samples_per_class = num_clients  # Need at least one per client
+    train_class_counts = np.bincount(train_targets)
+    test_class_counts = np.bincount(test_targets)
+    
+    for c in range(num_classes):
+        if train_class_counts[c] < min_samples_per_class:
+            raise ValueError(f"Class {c} has only {train_class_counts[c]} train samples but needs at least {min_samples_per_class}")
+        if test_class_counts[c] < min_samples_per_class:
+            raise ValueError(f"Class {c} has only {test_class_counts[c]} test samples but needs at least {min_samples_per_class}")
+    
+    def get_class_indices(features, targets):
+        return {i: np.where(np.array(targets) == i)[0] for i in range(num_classes)}
+    
+    train_class_indices = get_class_indices(train_features, train_targets)
+    test_class_indices = get_class_indices(test_features, test_targets)
+
+    class_proportions = {c: np.random.dirichlet(alpha * np.ones(num_clients)) for c in range(num_classes)}
+
+    def assign_data(features, targets, class_indices, split_name):
+        for c in range(num_classes):
+            indices = class_indices[c]
+            np.random.shuffle(indices)
+            
+            mandatory_assignments = indices[:num_clients]
+            remaining_indices = indices[num_clients:]
+            
+            for i in range(num_clients):
+                idx = mandatory_assignments[i]
+                client_data[i][split_name]['features'].append(features[idx])
+                client_data[i][split_name]['targets'].append(targets[idx])
+            
+            if len(remaining_indices) > 0:
+                proportions = (np.cumsum(class_proportions[c]) * len(remaining_indices)).astype(int)[:-1]
+                client_splits = np.split(remaining_indices, proportions)
+                
+                for i, split in enumerate(client_splits):
+                    client_data[i][split_name]['features'].extend(features[idx] for idx in split)
+                    client_data[i][split_name]['targets'].extend(targets[idx] for idx in split)
+    
+    assign_data(train_features, train_targets, train_class_indices, 'train')
+    assign_data(test_features, test_targets, test_class_indices, 'test')
+    
+    for i in range(num_clients):
+        for split in ['train', 'test']:
+            client_data[i][split]['features'] = np.array(client_data[i][split]['features'])
+            client_data[i][split]['targets'] = np.array(client_data[i][split]['targets'])
+    
+    return ([client_data[i]['train']['features'] for i in range(num_clients)],
+            [client_data[i]['train']['targets'] for i in range(num_clients)],
+            [client_data[i]['test']['features'] for i in range(num_clients)],
+            [client_data[i]['test']['targets'] for i in range(num_clients)])
+
+
+
 
 def get_binary_dataset_names():
     return [
@@ -261,5 +324,7 @@ def split_function(features, target, num_clients, random_state, my_split='unifor
         return split_data_uniform(features, target, num_clients, random_state)
     elif my_split == 'random':
         return split_data_random(features, target, num_clients)
+    elif my_split == 'dirichlet':  #train_features, train_targets, test_features, test_targets, num_clients, alpha=0.5, seed=None
+        return split_data_dirichlet(features, target, num_clients, random_state)
     else:
         raise ValueError("Invalid split type. Choose 'continuous', 'uniform', or 'random'.")
