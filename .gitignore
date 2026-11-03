@@ -7,3 +7,5 @@ code/run_experiments.py
 code/fed2rc_no_fluke.py
 code/fed2rc_with_voting_classifiers.py
 code/mini_fed2rc.py
+results/centralized_metrics
+results/federated_metrics

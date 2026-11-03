@@ -1,5 +1,0 @@
-Dataset,Seed,Test_Accuracy,Test_F1,Rounds_to_Converge,Final_Groups
-Car,42,0.8166666666666667,0.8202329749103943,3,4
-Coffee,42,1.0,1.0,2,5
-Computers,42,0.72,0.717741935483871,2,6
-EOGHorizontalSignal,42,0.5220994475138122,0.5348654425868885,2,4
