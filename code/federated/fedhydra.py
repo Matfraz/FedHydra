@@ -300,6 +300,7 @@ def hydra():
                 local_best_accs = np.concatenate([local_best_accs, [best_accuracy]])
 
             lam = np.sum(local_best_lambdas) / max(np.sum(local_best_accs), 1e-12)
+            print(lam)
             A_final = A_global + lam * np.eye(A_global.shape[0])
             W_final = np.linalg.solve(A_final, b_global)
             W_final =  W_final / (np.linalg.norm(W_final, axis=0, keepdims=True) + 1e-10)

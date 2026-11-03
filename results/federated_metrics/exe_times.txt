@@ -7,6 +7,7 @@ fed2rc_wvc_1s_512k_1r: 76.9 s
 
 fed2rc_wvc_1s_4096k: 662.7 s
 fed2rc_wvc_1s_4096k_1r:2575.2 s
+fed2rc_wvc_1s_10kk: 2274 s
 
 fed2rc_1s_512k: 77.2 s
 fed2rc_1s_512k_1r: 55.1 s

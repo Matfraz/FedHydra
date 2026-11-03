@@ -3,3 +3,8 @@ sktime
 scikit-learn
 pandas
 numpy
+matplotlib.pyplot
+seaborn
+torch
+
+

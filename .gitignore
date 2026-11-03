@@ -1,2 +1,9 @@
 data/UCR_Archive
 appunti.md
+wandb
+code/centralized
+code/utils
+code/run_experiments.py
+code/fed2rc_no_fluke.py
+code/fed2rc_with_voting_classifiers.py
+code/mini_fed2rc.py
