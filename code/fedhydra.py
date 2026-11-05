@@ -25,6 +25,7 @@ parser.add_argument('-g', '--groups', type=int, default=64, help='Choose the num
 parser.add_argument('-r', '--rounds', type=int, default=100, help='Choose the number of rounds of federated training')
 parser.add_argument('--split', choices=['iid', 'dirichlet'], default='iid')
 parser.add_argument('--alpha', type=float, default=0.5)
+parser.add_argument('--file', type=str, default="fedhydra.csv", help='Choose the name of the file')
 parser.add_argument('-v', '--validation', action='store_true', help='Choose this option to enable a grid search for the lambda regularizer on a validation set.')
 parser.add_argument('--debug', action='store_true', help='Use this option to disable WandB metrics tracking')
 args = parser.parse_args()
@@ -34,12 +35,14 @@ n_kernels = args.kernels
 n_rounds = args.rounds
 n_groups = args.groups
 
+file_name = args.file
+
 top_k_per_client = max(1, (n_groups * 1) // n_clients)
-EXPERIMENT_SEEDS = [42]
+EXPERIMENT_SEEDS = [1,2,3,4,5]
 
 def hydra():
-    #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    list_of_datasets = ['Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
+    list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
+    #list_of_datasets = ['Fungi','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
 
     if args.debug:
             wandb.init(mode="disabled")
@@ -65,10 +68,11 @@ def hydra():
         else:
             entity = "matfraz-universit-di-torino"
             project = "FedHydra"
+            split_tag = "IID" if args.split == 'iid' else f"DIR{args.alpha}"
             if args.validation:
-                run_name = f"VAL_{ds_name}_{n_groups}GROUPS_{n_clients}CLIENTS"
+                run_name = f"VAL_{ds_name}_{n_groups}GROUPS_{n_clients}CLIENTS_{split_tag}"
             else:
-                run_name = f"{ds_name}_{n_groups}GROUPS_{n_clients}CLIENTS"
+                run_name = f"{ds_name}_{n_groups}GROUPS_{n_clients}CLIENTS_{split_tag}"
             tags = ["FedHydra"]
             if run_name in run_names:
                 print(f"Experiment {run_name} already executed.")
@@ -87,8 +91,16 @@ def hydra():
 
             #partendo da un dataset unico (UCR Archive), il codice deve "frammentarlo" artificialmente e assegnarne un pezzo a ciascun finto client.
             if args.split == 'dirichlet':
-                split = 'dirichlet'
-                s_X_train, s_Y_train, s_X_test, s_Y_test = split_data_dirichlet( X_train, Y_train, X_test, Y_test, n_clients,alpha=args.alpha, seed=experiment_seed)
+                try:
+                    split = 'dirichlet'
+                    s_X_train, s_Y_train, s_X_test, s_Y_test = split_data_dirichlet( X_train, Y_train, X_test, Y_test, n_clients,alpha=args.alpha, seed=experiment_seed)
+                except Exception as e:
+                    print(f"{ds_name}: Dirichlet non possibile ({e}) -> uso random")
+                    tr = split_function(X_train, Y_train, n_clients, rng, my_split='random')
+                    te = split_function(X_test,  Y_test,  n_clients, rng, my_split='random')
+                    s_X_train = [x for x, _ in tr]; s_Y_train = [y for _, y in tr]
+                    s_X_test  = [x for x, _ in te]; s_Y_test  = [y for _, y in te]
+                    split = 'random'
             elif ds_name in ["DiatomSizeReduction", "Fungi", "PigAirwayPressure", "PigArtPressure", "PigCVP"]:
                 split = "random"
                 s_X_Y_train = split_function(X_train, Y_train, n_clients, rng, my_split=split)
@@ -102,7 +114,6 @@ def hydra():
                 s_X_train, s_Y_train = split_function(X_train, Y_train, n_clients, rng, my_split=split)
                 s_X_test, s_Y_test = split_function(X_test, Y_test, n_clients, rng, my_split=split)
 
-    
             # Initialize different seeds for all clients
             # ogni client parte con un pacchetto di filtri iniziale unico.
             seeds = np.arange(n_clients * n_groups).reshape(n_clients, n_groups)
@@ -304,7 +315,14 @@ def hydra():
                 local_best_lambdas = np.concatenate([local_best_lambdas, [tmp_lambda * best_accuracy]])
                 local_best_accs = np.concatenate([local_best_accs, [best_accuracy]])
 
-            lam = np.sum(local_best_lambdas) / max(np.sum(local_best_accs), 1e-12)
+            total_acc = np.sum(local_best_accs)
+            if total_acc > 0:
+                lam = np.sum(local_best_lambdas) / total_acc
+            else:
+                lam = 1.0   
+            lam = max(lam, 1e-3)   
+            #print(lam)
+
             A_final = A_global + lam * np.eye(A_global.shape[0])
             W_final = np.linalg.solve(A_final, b_global)
             W_final =  W_final / (np.linalg.norm(W_final, axis=0, keepdims=True) + 1e-10)
@@ -323,16 +341,16 @@ def hydra():
             if args.validation:    
                 wandb.log({f'Test Accuracy using a regularizer coming from a validation set ({experiment_seed})': test_accuracy,
                             f'Test F1 using a regularizer coming from a validation set ({experiment_seed})': test_f1,
-                            f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
+                            f'Validation Regularizer': lam,
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_groups})
             else:
                 wandb.log({f'Test Accuracy ({experiment_seed})': test_accuracy,
                             f'Test F1 ({experiment_seed})': test_f1,
-                            f'Validation Regularizer': np.sum(local_best_lambdas)/np.sum(local_best_accs),
+                            f'Validation Regularizer': lam,
                             f'Rounds': ({epoch}),
                             f'Kernels': final_num_groups})
-            csv_path = 'results/fedhydra_results.csv'
+            csv_path = f"results/{file_name}"
             os.makedirs(os.path.dirname(csv_path), exist_ok=True)
             file_exists = os.path.isfile(csv_path)
             
@@ -348,3 +366,8 @@ if __name__ == '__main__':
     hydra()
     elapsed = time.perf_counter() - t0
     print(f"\nTempo totale: {elapsed:.1f} s ({elapsed / 60:.1f} min)")
+
+    tempo_str = f"{file_name} = {elapsed:.1f} s ({elapsed / 60:.1f} min)\n"
+    os.makedirs('results', exist_ok=True)
+    with open('results/tempo_totale.txt', mode='a') as f:
+        f.write(tempo_str)

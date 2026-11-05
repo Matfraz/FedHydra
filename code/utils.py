@@ -235,10 +235,27 @@ def load_dataset(ds_name):
     Y_test = LE.transform(Y_test)
     return X_train, Y_train, X_test, Y_test
 
+def fill_nan(X):
+    X = np.array(X, dtype=float)
+    if not np.isnan(X).any():
+        return X
+    for i in range(X.shape[0]):
+        row = X[i]
+        mask = np.isnan(row)
+        if mask.any():
+            if mask.all():
+                X[i] = 0.0
+            else:
+                idx = np.arange(len(row))
+                row[mask] = np.interp(idx[mask], idx[~mask], row[~mask])
+    return X
+
 def preprocess_data(X_train, Y_train, X_test, Y_test):
     # TODO: Scale each time series?
-    # TODO: NaN values? Should be none in the data
     # TODO: LabelEncoder necessary if we do not use PyTorch?
+    # NaN values
+    X_train = fill_nan(X_train)
+    X_test = fill_nan(X_test)
     return X_train, Y_train, X_test, Y_test
 
 # Split data continuously
@@ -299,10 +316,12 @@ def split_data_uniform(features, target, num_clients, rng):
     return X_clients, Y_clients
 
 # Random split data
-def split_data_random(features, target, num_clients):
+def split_data_random(features, target, num_clients, random_state):
+    features = pd.DataFrame(features)         
+    target = pd.Series(target, name='y')
     combined_df = pd.concat([features, target], axis=1)
     
-    combined_df = combined_df.sample(frac=1, random_state=myseed).reset_index(drop=True)
+    combined_df = combined_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
     
     client_data = []
     data_per_client = len(combined_df) // num_clients
@@ -311,8 +330,8 @@ def split_data_random(features, target, num_clients):
         start_idx = i * data_per_client
         end_idx = (i + 1) * data_per_client
         client_df = combined_df[start_idx:end_idx]
-        client_features = client_df.iloc[:, :-1]
-        client_target = client_df.iloc[:, -1]
+        client_features = client_df.iloc[:, :-1].to_numpy()
+        client_target = client_df.iloc[:, -1].to_numpy()
         client_data.append((client_features, client_target))
 
     return client_data
@@ -323,7 +342,7 @@ def split_function(features, target, num_clients, random_state, my_split='unifor
     elif my_split == 'uniform':
         return split_data_uniform(features, target, num_clients, random_state)
     elif my_split == 'random':
-        return split_data_random(features, target, num_clients)
+        return split_data_random(features, target, num_clients,random_state)
     elif my_split == 'dirichlet':  #train_features, train_targets, test_features, test_targets, num_clients, alpha=0.5, seed=None
         return split_data_dirichlet(features, target, num_clients, random_state)
     else:
