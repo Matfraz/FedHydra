@@ -5,11 +5,13 @@ FedHydra builds opon Fed2Rc (https://github.com/CasellaJr/Fed2RC). Our goal was 
 and conventional dictionary methods.
 
 ## Usage
-Clone this repo.
-Download and unzip the UCRArchive Time Series Classification dataset: UCRArchive, and place it in the same directory of the repository.
-Install the requirements.
-Run experiments:
+* Clone this repo.
+* Download and unzip the UCRArchive Time Series Classification dataset: UCRArchive, and place it in the same directory of the repository.
+* Install the requirements.
+* Run experiments:
 python fedhydra.py 
+
+
 Note: To change the configurations and experimental setups, please look at or edit the code/fedhydra.py file directly.
 
 ## Results
