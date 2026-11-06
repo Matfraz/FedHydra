@@ -41,8 +41,8 @@ top_k_per_client = max(1, (n_groups * 1) // n_clients)
 EXPERIMENT_SEEDS = [1,2,3,4,5]
 
 def hydra():
-    list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    #list_of_datasets = ['Fungi','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
+    #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
+    list_of_datasets = ['SemgHandSubjectCh2','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
 
     if args.debug:
             wandb.init(mode="disabled")
