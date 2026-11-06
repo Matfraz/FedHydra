@@ -42,8 +42,9 @@ EXPERIMENT_SEEDS = [1,2,3,4,5]
 
 def hydra():
     #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    #list_of_datasets = ['SemgHandSubjectCh2','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
-    list_of_datasets = ['StarLightCurves', 'Ham']
+    #list_of_datasets = ['Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
+    #'SemgHandSubjectCh2','Car', 
+    list_of_datasets = ['Ham','StarLightCurves']
 
     if args.debug:
             wandb.init(mode="disabled")
@@ -142,8 +143,13 @@ def hydra():
 
                 for client_id in range(n_clients):
                     x_train, y_train = s_X_train[client_id], s_Y_train[client_id]
+
+                    if len(x_train) == 0 or len(np.unique(y_train)) < 2:
+                        continue
+
                     if args.validation:
                         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size = 0.1, random_state=experiment_seed)
+
                     # Il client legge quali seed (filtri) gli sono stati assegnati per questo round.
                     client_seeds = dict_seeds[client_id]
                     # Applica la trasformazione Hydra (transform_seeds) per convertire le sue serie temporali in feature numeriche basate su quei filtr
@@ -215,6 +221,9 @@ def hydra():
             N_samples = []
             for client_id in range(n_clients):
                 x_train, y_train = s_X_train[client_id], s_Y_train[client_id]
+                if len(x_train) == 0:
+                    list_x_trans.append(None)
+                    continue
                 client_seeds = dict_seeds[client_id]
  
                 x_trans = hydra_transform_seeds(x_train, client_seeds, n_kernels, ts_length)
@@ -245,6 +254,11 @@ def hydra():
 
             for client_id in range(n_clients):
                 y_train = s_Y_train[client_id]
+                if list_x_trans[client_id] is None:
+                    list_x_scaled.append(None)
+                    A_locals.append(None)
+                    b_locals.append(None)
+                    continue
  
                 # Stessa trasformazione dello SparseScaler (mask=True), con i parametri globali
                 s = np.sqrt(np.maximum(np.asarray(list_x_trans[client_id], dtype=np.float64), 0.0))
@@ -277,7 +291,10 @@ def hydra():
             for client_id in range(n_clients):
                 tmp_lambda = 0
                 best_accuracy = 0
+                
                 x_train, y_train = s_X_train[client_id], s_Y_train[client_id]
+                if len(x_train) == 0 or len(np.unique(y_train)) < 2:
+                    continue
 
                 if args.validation:
                     _, x_val, _, y_val = train_test_split(x_train, y_train, test_size = 0.1, random_state=experiment_seed)
