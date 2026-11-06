@@ -42,7 +42,8 @@ EXPERIMENT_SEEDS = [1,2,3,4,5]
 
 def hydra():
     #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    list_of_datasets = ['SemgHandSubjectCh2','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
+    #list_of_datasets = ['SemgHandSubjectCh2','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
+    list_of_datasets = ['StarLightCurves', 'Ham']
 
     if args.debug:
             wandb.init(mode="disabled")

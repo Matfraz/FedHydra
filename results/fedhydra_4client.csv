@@ -1,0 +1,3 @@
+Dataset,Seed,Test_Accuracy,Test_F1,Rounds_to_Converge,Final_Groups
+SemgHandSubjectCh2,1,0.7977777777777778,0.794873825338955,0,64
+SemgHandSubjectCh2,2,0.8,0.7985178743298055,0,64
