@@ -41,9 +41,8 @@ top_k_per_client = max(1, (n_groups * 1) // n_clients)
 EXPERIMENT_SEEDS = [1,2,3,4,5]
 
 def hydra():
-    #list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
-    list_of_datasets = ['SemgHandSubjectCh2','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
-    #list_of_datasets = ['Ham','StarLightCurves']
+    list_of_datasets =  get_binary_dataset_names() +  get_three_classes_dataset_names() + get_four_classes_dataset_names() + get_multiclasses_dataset_names()
+    #list_of_datasets = ['SemgHandSubjectCh2','Car', 'Coffee','Computers', 'EOGHorizontalSignal', 'Adiac']
 
     if args.debug:
             wandb.init(mode="disabled")
@@ -79,7 +78,7 @@ def hydra():
                 print(f"Experiment {run_name} already executed.")
                 continue
             else:
-                wandb.init(project=project, entity=entity, group=f"{run_name}", name=run_name, tags=tags)
+                wandb.init(project=project, entity=entity, group=f"{run_name}",  name=run_name, tags=tags)
 
         for experiment_seed in EXPERIMENT_SEEDS:
             print('SEED', experiment_seed)
