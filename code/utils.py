@@ -2,27 +2,8 @@ import numpy as np
 import pandas as pd
 import random
 import torch
-from sktime.transformations.panel.rocket import Rocket
 from sklearn.preprocessing import LabelEncoder
 from aeon.transformations.collection.convolution_based import HydraTransformer
-
-# Better interface with helper functions
-class RocketKernel:
-
-    def __init__(self, seed, ts_length, ppv_only=True):
-        self.rocket = Rocket(num_kernels=1, random_state=int(seed))
-        self.rocket.fit(np.zeros((1, 1, ts_length)))
-        self.ppv_only = ppv_only
-
-    def transform(self, X):
-        if len(X.shape) <= 1:
-            X = X.reshape(1, -1)
-
-        X_transformed = self.rocket.transform(np.expand_dims(X, 1)).to_numpy()
-        if self.ppv_only:
-            X_transformed = X_transformed[:, 0:1]
-
-        return X_transformed
 
 
 class HydraGroup:
@@ -42,9 +23,6 @@ def hydra_transform_seeds(X, seeds, n_kernels, ts_length):
     K = [HydraGroup(int(seed),n_kernels, ts_length) for seed in seeds]
     return np.concatenate([k.transform(X) for k in K], axis=1)
 
-def transform_seeds(X, seeds, ts_length):
-    K = [RocketKernel(int(seed), ts_length, ppv_only=True) for seed in seeds]
-    return np.concatenate([k.transform(X) for k in K], axis=1)
 
 class SparseScaler:
     """Sparse Scaler for hydra transform."""

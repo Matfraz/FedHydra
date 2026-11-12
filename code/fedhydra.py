@@ -15,7 +15,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.model_selection import train_test_split
-from utils import load_dataset, preprocess_data, split_function, RocketKernel,transform_seeds, get_binary_dataset_names, get_three_classes_dataset_names, get_four_classes_dataset_names, get_multiclasses_dataset_names, HydraGroup, hydra_transform_seeds, SparseScaler, split_data_dirichlet
+from utils import load_dataset, preprocess_data, split_function, get_binary_dataset_names, get_three_classes_dataset_names, get_four_classes_dataset_names, get_multiclasses_dataset_names, HydraGroup, hydra_transform_seeds, SparseScaler, split_data_dirichlet
 from sklearn.preprocessing import LabelBinarizer
 
 parser = argparse.ArgumentParser()
