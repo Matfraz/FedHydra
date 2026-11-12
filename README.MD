@@ -1,7 +1,7 @@
 # FedHydra: a federated classifier based on Hydra
 
 ## Abstract
-FedHydra builds opon Fed2Rc (https://github.com/CasellaJr/Fed2RC). Our goal was to use a new paradigm in the Time Series Classification namely Hydra in Federated Learning. Hydra is a dictonary method using competing convolutional kernels, incorporating aspects of both Rocket
+FedHydra builds upon Fed2Rc (https://github.com/CasellaJr/Fed2RC). Our goal was to use a new paradigm in the Time Series Classification namely Hydra in Federated Learning. Hydra is a dictonary method using competing convolutional kernels, incorporating aspects of both Rocket
 and conventional dictionary methods.
 
 ## Usage
